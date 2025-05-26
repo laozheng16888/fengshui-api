@@ -53,11 +53,15 @@ Use professional, but easy-to-understand English. Minimum 600 words.
     let body = "";
     response.on("data", (chunk) => (body += chunk));
     response.on("end", () => {
-      const result = JSON.parse(body);
-      if (result.choices) {
-        res.status(200).json({ report: result.choices[0].message.content });
-      } else {
-        res.status(500).json({ error: "GPT returned error", detail: result });
+      try {
+        const result = JSON.parse(body);
+        if (result.choices) {
+          res.status(200).json({ report: result.choices[0].message.content });
+        } else {
+          res.status(500).json({ error: "GPT returned error", detail: result });
+        }
+      } catch (err) {
+        res.status(500).json({ error: "Invalid JSON", raw: body });
       }
     });
   });
