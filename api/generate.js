@@ -1,17 +1,17 @@
-import { Configuration, OpenAIApi } from "openai";
+const { Configuration, OpenAIApi } = require("openai");
 
-export default async function handler(req, res) {
+const configuration = new Configuration({
+  apiKey: process.env.OPENAI_API_KEY,
+});
+
+const openai = new OpenAIApi(configuration);
+
+module.exports = async (req, res) => {
   if (req.method !== "POST") {
-    return res.status(405).json({ error: "Only POST requests are allowed." });
+    return res.status(405).json({ error: "Only POST allowed" });
   }
 
   const { name, gender, birthDate, birthTime, birthPlace } = req.body;
-
-  const configuration = new Configuration({
-    apiKey: process.env.OPENAI_API_KEY,
-  });
-
-  const openai = new OpenAIApi(configuration);
 
   const prompt = `
 You are a professional Chinese metaphysics master. Based on the following user's birth information, generate a personalized Feng Shui report in English.
@@ -50,6 +50,6 @@ Use professional, but easy-to-understand English. Minimum 600 words.
     res.status(200).json({ report: result });
   } catch (error) {
     console.error(error.response?.data || error.message);
-    res.status(500).json({ error: "Error generating report." });
+    res.status(500).json({ error: "OpenAI error." });
   }
-}
+};
