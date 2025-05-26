@@ -1,10 +1,4 @@
-const { Configuration, OpenAIApi } = require("openai");
-
-const configuration = new Configuration({
-  apiKey: process.env.OPENAI_API_KEY,
-});
-
-const openai = new OpenAIApi(configuration);
+const https = require("https");
 
 module.exports = async (req, res) => {
   if (req.method !== "POST") {
@@ -37,19 +31,42 @@ Please include:
 Use professional, but easy-to-understand English. Minimum 600 words.
 `;
 
-  try {
-    const completion = await openai.createChatCompletion({
-      model: "gpt-4",
-      messages: [
-        { role: "system", content: "You are a professional BaZi and Feng Shui master." },
-        { role: "user", content: prompt },
-      ],
-    });
+  const data = JSON.stringify({
+    model: "gpt-4",
+    messages: [
+      { role: "system", content: "You are a professional BaZi and Feng Shui master." },
+      { role: "user", content: prompt }
+    ]
+  });
 
-    const result = completion.data.choices[0].message.content;
-    res.status(200).json({ report: result });
-  } catch (error) {
-    console.error(error.response?.data || error.message);
-    res.status(500).json({ error: "OpenAI error." });
-  }
+  const options = {
+    hostname: "api.openai.com",
+    path: "/v1/chat/completions",
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
+    }
+  };
+
+  const request = https.request(options, (response) => {
+    let body = "";
+    response.on("data", (chunk) => (body += chunk));
+    response.on("end", () => {
+      const result = JSON.parse(body);
+      if (result.choices) {
+        res.status(200).json({ report: result.choices[0].message.content });
+      } else {
+        res.status(500).json({ error: "GPT returned error", detail: result });
+      }
+    });
+  });
+
+  request.on("error", (error) => {
+    console.error("GPT error:", error);
+    res.status(500).json({ error: "Failed to connect to OpenAI" });
+  });
+
+  request.write(data);
+  request.end();
 };
