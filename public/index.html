@@ -1,1 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Feng Shui Report Generator</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f9f9f9;
+      padding: 40px;
+    }
+    form {
+      max-width: 500px;
+      margin: auto;
+      background: white;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 0 8px rgba(0,0,0,0.1);
+    }
+    label {
+      display: block;
+      margin-top: 15px;
+    }
+    input, select {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+    }
+    button {
+      margin-top: 20px;
+      padding: 12px;
+      background: #0070f3;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      width: 100%;
+      font-size: 16px;
+    }
+    #report {
+      margin-top: 30px;
+      white-space: pre-wrap;
+      background: #fff;
+      padding: 20px;
+      border-radius: 6px;
+      box-shadow: 0 0 6px rgba(0,0,0,0.1);
+    }
+  </style>
+</head>
+<body>
 
+  <form id="reportForm">
+    <h2>Feng Shui Report Form</h2>
+    <label>Full Name:</label>
+    <input type="text" id="name" required />
+    <label>Gender:</label>
+    <select id="gender" required>
+      <option value="male">Male</option>
+      <option value="female">Female</option>
+    </select>
+    <label>Date of Birth:</label>
+    <input type="date" id="birthDate" required />
+    <label>Time of Birth:</label>
+    <input type="time" id="birthTime" required />
+    <label>Birthplace:</label>
+    <input type="text" id="birthPlace" required />
+    <button type="submit">Generate Report</button>
+  </form>
+
+  <div id="report"></div>
+
+  <script>
+    document.getElementById('reportForm').addEventListener('submit', async function (e) {
+      e.preventDefault();
+
+      const data = {
+        name: document.getElementById('name').value,
+        gender: document.getElementById('gender').value,
+        birthDate: document.getElementById('birthDate').value,
+        birthTime: document.getElementById('birthTime').value,
+        birthPlace: document.getElementById('birthPlace').value
+      };
+
+      document.getElementById('report').innerHTML = "Generating report... please wait.";
+
+      try {
+        const response = await fetch('/api/generate', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(data)
+        });
+
+        const result = await response.json();
+        if (result.report) {
+          document.getElementById('report').innerText = result.report;
+        } else {
+          document.getElementById('report').innerText = "Error: " + result.error;
+        }
+      } catch (err) {
+        document.getElementById('report').innerText = "Error occurred. Please try again.";
+      }
+    });
+  </script>
+
+</body>
+</html>
